@@ -56,4 +56,9 @@ jobs:
           
           # Коммитим, только если есть изменения
           git diff --quiet && git diff --staged --quiet || git commit -m "Авто-обновление очищенных ключей: $(date +'%Y-%m-%d %H:%M')"
-          git push
+          
+          # Стягиваем изменения из GitHub, если ты что-то правил в коде, 
+          # чтобы не было конфликтов при push
+          git pull --rebase origin main
+          
+          git push origin main
