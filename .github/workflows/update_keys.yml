@@ -2,7 +2,7 @@ name: Multi-Link VLESS Filter
 
 on:
   schedule:
-    - cron: '0 */3 * * *' # Авто-обновление каждые 3 часа
+    - cron: '0 */1 * * *' # Авто-обновление каждый час
   workflow_dispatch: # Позволяет запустить вручную в любой момент
 
 jobs:
@@ -26,8 +26,8 @@ jobs:
             # Скачиваем во временный файл
             curl -sL "$url" > temp_raw.txt
             
-            # Фильтруем: удаляем RU, Russia, Россия и флаг 🇷🇺 (\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA)
-            grep -v -E "RU|Russia|Россия|🇷🇺|\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA" temp_raw.txt > "$output" || true
+            # Фильтруем: удаляем флаг 🇷🇺 (\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA)
+            grep -v -E "🇷🇺|\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA" temp_raw.txt > "$output" || true
             
             # Чистим временный файл
             rm -f temp_raw.txt
