@@ -1,0 +1,59 @@
+name: Multi-Link VLESS Filter
+
+on:
+  schedule:
+    - cron: '0 */3 * * *' # Авто-обновление каждые 3 часа
+  workflow_dispatch: # Позволяет запустить вручную в любой момент
+
+jobs:
+  filter-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch and Filter All Links
+        run: |
+          # === НАСТРОЙКА ССЫЛОК ===
+          # Шаблон: download_and_filter "ССЫЛКА" "ИМЯ_ФАЙЛА.txt"
+          
+          download_and_filter() {
+            local url="$1"
+            local output="$2"
+            
+            echo "Скачиваю и фильтрую: $output"
+            
+            # Скачиваем во временный файл
+            curl -sL "$url" > temp_raw.txt
+            
+            # Фильтруем: удаляем RU, Russia, Россия и флаг 🇷🇺 (\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA)
+            grep -v -E "RU|Russia|Россия|🇷🇺|\xF0\x9F\x87\xB7\xF0\x9F\x87\xBA" temp_raw.txt > "$output" || true
+            
+            # Чистим временный файл
+            rm -f temp_raw.txt
+          }
+
+          # --- СПИСОК ТВОИХ ССЫЛОК (Добавляй/меняй сколько хочешь) ---
+          
+          # 1. Твоя текущая универсальная ссылка
+          download_and_filter "https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt" "list_universal_filter.txt"
+          
+          # 2. Пример второй ссылки (замени на реальную, если нужно)
+          download_and_filter "https://raw.githack.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt" "black_vless_rus_filter.txt"
+          
+          # 3. Пример третьей ссылки
+          # download_and_filter "https://raw.githack.com/igareck/vpn-configs-for-russia/main/BLACK_SS%2BAll_RUS.txt" "ss_all_black_filter.txt"
+          
+          # ========================
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "KeyFilterBot"
+          git config --global user.email "actions@github.com"
+          
+          # Добавляем все текстовые файлы, которые обновились
+          git add *.txt
+          
+          # Коммитим, только если есть изменения
+          git diff --quiet && git diff --staged --quiet || git commit -m "Авто-обновление очищенных ключей: $(date +'%Y-%m-%d %H:%M')"
+          git push
